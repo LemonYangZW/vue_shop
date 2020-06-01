@@ -42,7 +42,13 @@ export default {
   data () {
     return {
       menulist: [],
-      iconsObj: { 125: 'fa fa-user-circle', 103: 'fa fa-user-circle', 101: 'fa fa-user-circle', 102: 'fa fa-user-circle', 145: 'fa fa-user-circle' }
+      iconsObj: {
+        125: 'fa fa-user-circle',
+        103: 'fa fa-cog',
+        101: 'fa fa-shopping-cart',
+        102: 'fa fa-file-text',
+        145: 'fa fa-table'
+      }
     }
   },
   methods: {
@@ -84,5 +90,8 @@ export default {
 }
 .el-main {
   background-color: #eaedf1;
+}
+.fa {
+  margin-right: 16px;
 }
 </style>
