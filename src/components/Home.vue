@@ -8,8 +8,18 @@
       <el-button type="info" @click="logout">退出</el-button>
     </el-header>
     <el-container>
-      <el-aside>
-        <el-menu background-color="#333744" text-color="#fff" active-text-color="#409EFF">
+      <el-aside :width="isCollapse ? '64px':'200px'">
+        <div class="toggle-button" @click="toggleCollapse">
+          <i class="fa fa-ellipsis-h"></i>
+        </div>
+        <el-menu
+          :collapse="isCollapse"
+          :collapse-transition="false"
+          unique-opened="true"
+          background-color="#333744"
+          text-color="#fff"
+          active-text-color="#409EFF"
+        >
           <el-submenu :index="item.id + ''" v-for="item in menulist" :key="item.id">
             <template slot="title">
               <i :class="iconsObj[item.id]"></i>
@@ -48,7 +58,8 @@ export default {
         101: 'fa fa-shopping-cart',
         102: 'fa fa-file-text',
         145: 'fa fa-table'
-      }
+      },
+      isCollapse: false
     }
   },
   methods: {
@@ -61,6 +72,9 @@ export default {
       if (res.meta.status !== 200) return this.$message.error(res.meta.status)
       this.menulist = res.data
       console.log(res)
+    },
+    toggleCollapse () {
+      this.isCollapse = !this.isCollapse
     }
   }
 }
@@ -69,6 +83,7 @@ export default {
 .home-container {
   height: 100%;
 }
+
 .el-header {
   background-color: #373d41;
   display: flex;
@@ -87,11 +102,25 @@ export default {
 }
 .el-aside {
   background-color: #333744;
+  .el-menu {
+    border-right: solid 0px #e6e6e6;
+  }
 }
 .el-main {
   background-color: #eaedf1;
 }
 .fa {
   margin-right: 16px;
+}
+.fa-ellipsis-h {
+  margin: 0;
+}
+.toggle-button {
+  background-color: #4a5064;
+  font-size: 10px;
+  line-height: 24px;
+  color: #fff;
+  text-align: center;
+  cursor: pointer;
 }
 </style>
