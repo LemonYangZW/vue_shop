@@ -13,12 +13,14 @@
           <i class="fa fa-ellipsis-h"></i>
         </div>
         <el-menu
+          :router="true"
           :collapse="isCollapse"
           :collapse-transition="false"
-          unique-opened="true"
+          :unique-opened="true"
           background-color="#333744"
           text-color="#fff"
           active-text-color="#409EFF"
+          :default-active="activePath"
         >
           <el-submenu :index="item.id + ''" v-for="item in menulist" :key="item.id">
             <template slot="title">
@@ -27,9 +29,10 @@
             </template>
 
             <el-menu-item
-              :index="subItem.id + ''"
+              :index="'/'+subItem.path"
               v-for="subItem in item.children"
               :key="subItem.id"
+              @click="saveNavState('/'+subItem.path)"
             >
               <template slot="title">
                 <i class="el-icon-menu"></i>
@@ -39,7 +42,9 @@
           </el-submenu>
         </el-menu>
       </el-aside>
-      <el-main>Main</el-main>
+      <el-main>
+        <router-view></router-view>
+      </el-main>
     </el-container>
   </el-container>
 </template>
@@ -48,6 +53,7 @@
 export default {
   created () {
     this.getMenuList()
+    this.activePath = window.sessionStorage.getItem('activePath')
   },
   data () {
     return {
@@ -59,7 +65,8 @@ export default {
         102: 'fa fa-file-text',
         145: 'fa fa-table'
       },
-      isCollapse: false
+      isCollapse: false,
+      activePath: ''
     }
   },
   methods: {
@@ -71,10 +78,14 @@ export default {
       const { data: res } = await this.$http.get('menus')
       if (res.meta.status !== 200) return this.$message.error(res.meta.status)
       this.menulist = res.data
-      console.log(res)
+      // console.log(res)
     },
     toggleCollapse () {
       this.isCollapse = !this.isCollapse
+    },
+    saveNavState (activePath) {
+      window.sessionStorage.setItem('activePath', activePath)
+      this.activePath = activePath
     }
   }
 }
