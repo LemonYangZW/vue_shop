@@ -88,7 +88,12 @@
             icon="el-icon-edit"
             @click="showEditDialog(scope.row)"
           ></el-button>
-          <el-button type="danger" size="mini" icon="el-icon-delete"></el-button>
+          <el-button
+            type="danger"
+            size="mini"
+            icon="el-icon-delete"
+            @click="removeUserById(scope.row.id)"
+          ></el-button>
           <el-tooltip effect="dark" content="修改" placement="top" :enterable="false">
             <el-button type="warning" size="mini" icon="el-icon-setting"></el-button>
           </el-tooltip>
@@ -171,6 +176,7 @@ export default {
   },
   methods: {
     async getUserList () {
+      console.log(this.queryInfo)
       const { data: res } = await this.$http.get('users', { params: this.queryInfo })
       if (res.meta.status !== 200) {
         return this.$message.error('获取用户列表失败')
@@ -232,7 +238,24 @@ export default {
     editDialogClosed () {
       this.getUserList()
       this.$refs.editFormRef.resetFields()
-      // this.getUserList()
+    },
+    removeUserById (id) {
+      this.$confirm('此操作将永久删除该用户，是否继续？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        const { data: res } = await this.$http.delete(`users/${id}`)
+        if (res.meta.status !== 200) return this.$message.error('删除失败')
+        this.$message.success('删除成功')
+        console.log(this.userlist)
+        if (this.userlist.length === 1) {
+          this.queryInfo.pagenum = 1
+        }
+        this.getUserList()
+      }).catch(() => {
+        this.$message.info('用户删除操作已取消')
+      })
     }
   }
 }
