@@ -94,7 +94,7 @@
             icon="el-icon-delete"
             @click="removeUserById(scope.row.id)"
           ></el-button>
-          <el-tooltip effect="dark" content="修改" placement="top" :enterable="false">
+          <el-tooltip effect="dark" content="分配角色" placement="top" :enterable="false">
             <el-button type="warning" size="mini" icon="el-icon-setting"></el-button>
           </el-tooltip>
         </template>

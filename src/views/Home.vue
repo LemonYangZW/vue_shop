@@ -2,7 +2,10 @@
   <el-container class="home-container">
     <el-header>
       <div>
-        <img src="..\assets\heima.png" />
+        <img
+          style="width:32px;height:32px;vertical-align:middle;margin-right:12px"
+          src="..\assets\logo_home.png"
+        />
         <span>后台管理系统</span>
       </div>
       <el-button type="info" @click="logout">退出</el-button>
