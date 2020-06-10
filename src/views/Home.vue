@@ -3,7 +3,7 @@
     <el-header>
       <div>
         <img
-          style="width:32px;height:32px;vertical-align:middle;margin-right:12px"
+          style="width:32px;height:32px;vertical-align:middle;margin:0px 6px 0px 12px"
           src="..\assets\logo_home.png"
         />
         <span>后台管理系统</span>
