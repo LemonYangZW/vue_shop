@@ -70,7 +70,7 @@
     </el-dialog>
     <el-dialog
       title="分配角色"
-      @close="editDialogClosed"
+      @close="setRoleDialogClosed"
       :visible.sync="setRoleDialogVisible"
       :close-on-click-modal="false"
       width="50%"
@@ -78,11 +78,22 @@
       <div>
         <p>当前的用户:{{userinfo.username}}</p>
         <p>当前的角色:{{userinfo.role_name}}</p>
+        <p>
+          分配新角色：
+          <el-select v-model="selectedRoleId" placeholder="请选择">
+            <el-option
+              v-for="item in rolesList"
+              :key="item.id"
+              :label="item.roleName"
+              :value="item.id"
+            ></el-option>
+          </el-select>
+        </p>
       </div>
 
       <span slot="footer" class="dialog-footer">
         <el-button @click="editDialogVisible = false">取 消</el-button>
-        <el-button @click="editUser" type="primary">确 定</el-button>
+        <el-button @click="saveRoleInfo" type="primary">确 定</el-button>
       </span>
     </el-dialog>
     <el-table :data="userlist" border stripe>
@@ -192,7 +203,8 @@ export default {
         ]
       },
       setRoleDialogVisible: false,
-      rolesList: []
+      rolesList: [],
+      selectedRoleId: ''
 
     }
   },
@@ -292,6 +304,22 @@ export default {
       }
       this.rolesList = res.data
       this.setRoleDialogVisible = true
+    },
+    async saveRoleInfo () {
+      if (!this.selectedRoleId) {
+        return this.$message.error('请选择角色')
+      }
+      const { data: res } = await this.$http.put(`users/${this.userinfo.id}/role`, { rid: this.selectedRoleId })
+      if (res.meta.status !== 200) {
+        return this.$message.error('更新角色失败')
+      }
+      this.$message.success('更新角色成功')
+      this.getUserList()
+      this.setRoleDialogVisible = false
+    },
+    setRoleDialogClosed () {
+      this.selectedRoleId = ''
+      this.userinfo = {}
     }
   }
 }
