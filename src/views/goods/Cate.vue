@@ -6,29 +6,36 @@
       <el-breadcrumb-item>商品分类</el-breadcrumb-item>
     </el-breadcrumb>
     <el-dialog
-      :close-on-click-modal="false"
       title="添加分类"
-      @close="addCateDialogClosed"
       :visible.sync="addCateDialogVisible"
       width="50%"
+      @close="addCateDialogClosed"
     >
+      <!-- 添加分类的表单 -->
       <el-form
-        ref="addCateFormRef"
         :model="addCateForm"
         :rules="addCateFormRules"
+        ref="addCateFormRef"
         label-width="100px"
       >
-        <el-form-item label="分类名称" prop="cat_name">
+        <el-form-item label="分类名称：" prop="cat_name">
           <el-input v-model="addCateForm.cat_name"></el-input>
         </el-form-item>
-        <el-form-item label="父级分类">
-          <el-cascader v-model="selectedKeys" :options="parentCateList" :props="cascaderProps"></el-cascader>
+        <el-form-item label="父级分类：">
+          <!-- options 用来指定数据源 -->
+          <!-- props 用来指定配置对象 -->
+          <el-cascader
+            :options="parentCateList"
+            :props="cascaderProps"
+            v-model="selectedKeys"
+            @change="parentCateChanged"
+            clearable
+          ></el-cascader>
         </el-form-item>
       </el-form>
-
       <span slot="footer" class="dialog-footer">
         <el-button @click="addCateDialogVisible = false">取 消</el-button>
-        <el-button @click="addCate" type="primary">确 定</el-button>
+        <el-button type="primary" @click="addCate">确 定</el-button>
       </span>
     </el-dialog>
     <el-card>
@@ -109,9 +116,12 @@ export default {
       ],
       addCateDialogVisible: false,
       addCateForm: {
+        // 将要添加的分类的名称
         cat_name: '',
-        cat_pid: '',
-        cat_level: ''
+        // 父级分类的Id
+        cat_pid: 0,
+        // 分类的等级，默认要添加的是1级分类
+        cat_level: 0
       },
       addCateFormRules: {
         cat_name: [
@@ -120,6 +130,7 @@ export default {
       },
       parentCateList: [],
       cascaderProps: {
+        checkStrictly: true,
         expandTrigger: 'hover',
         value: 'cat_id',
         label: 'cat_name',
@@ -155,10 +166,24 @@ export default {
       this.addCateDialogVisible = true
     },
     addCate () {
-      this.addCateDialogVisible = false
+      this.$refs.addCateFormRef.validate(async valid => {
+        if (!valid) return this.$message.error('请输入分类名称!')
+        const { data: res } = await this.$http.post('categories', this.addCateForm)
+
+        console.log(this.addCateForm)
+        if (res.meta.status !== 201) {
+          return this.$message.error('添加分类失败!')
+        }
+        this.$message.success('添加分类成功!')
+        this.getCateList()
+        this.addCateDialogVisible = false
+      })
     },
     addCateDialogClosed () {
-      this.getCateList()
+      this.$refs.addCateFormRef.resetFields()
+      this.selectedKeys = []
+      this.addCateForm.cat_level = 0
+      this.addCateForm.cat_pid = 0
     },
     async getParentCateList () {
       const { data: res } = await this.$http.get('categories', { params: { type: 2 } })
@@ -171,6 +196,14 @@ export default {
     },
     parentCateChanged () {
       console.log(this.selectedKeys)
+      console.log(this.addCateForm)
+      if (this.selectedKeys.length > 0) {
+        this.addCateForm.cat_pid = this.selectedKeys[this.selectedKeys.length - 1]
+        this.addCateForm.cat_level = this.selectedKeys.length
+      } else {
+        this.addCateForm.cat_pid = 0
+        this.addCateForm.cat_level = 0
+      }
     }
   }
 }
