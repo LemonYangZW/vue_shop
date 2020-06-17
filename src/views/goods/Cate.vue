@@ -38,6 +38,28 @@
         <el-button type="primary" @click="addCate">确 定</el-button>
       </span>
     </el-dialog>
+    <el-dialog
+      title="修改分类"
+      :visible.sync="editCateDialogVisible"
+      width="50%"
+      @close="editCateDialogClosed"
+    >
+      <!-- 添加分类的表单 -->
+      <el-form
+        :model="editCateForm"
+        :rules="editCateFormRules"
+        ref="editCateFormRef"
+        label-width="100px"
+      >
+        <el-form-item label="分类名称：" prop="cat_name">
+          <el-input v-model="editCateForm.cat_name"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editCateDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="editCate">确 定</el-button>
+      </span>
+    </el-dialog>
     <el-card>
       <el-row>
         <el-col>
@@ -65,8 +87,13 @@
           <el-tag size="mini" type="success" v-else-if="scope.row.cat_level === 1">两级</el-tag>
           <el-tag size="mini" type="warning" v-else>三级</el-tag>
         </template>
-        <template #opt>
-          <el-button type="primary" icon="el-icon-edit" size="mini">编辑</el-button>
+        <template #opt="scope">
+          <el-button
+            type="primary"
+            icon="el-icon-edit"
+            size="mini"
+            @click="showEditDialog(scope.row)"
+          >编辑</el-button>
           <el-button type="danger" icon="el-icon-delete" size="mini">删除</el-button>
         </template>
       </tree-table>
@@ -124,6 +151,21 @@ export default {
         cat_level: 0
       },
       addCateFormRules: {
+        cat_name: [
+          { required: true, message: '请输入分类名称', trigger: 'blur' }
+        ]
+      },
+      editCateDialogVisible: false,
+      editCateForm: {
+        cat_id: 0,
+        // 将要添加的分类的名称
+        cat_name: '',
+        // 父级分类的Id
+        cat_pid: 0,
+        // 分类的等级，默认要添加的是1级分类
+        cat_level: 0
+      },
+      editCateFormRules: {
         cat_name: [
           { required: true, message: '请输入分类名称', trigger: 'blur' }
         ]
@@ -204,6 +246,29 @@ export default {
         this.addCateForm.cat_pid = 0
         this.addCateForm.cat_level = 0
       }
+    },
+    showEditDialog (categoriesInfo) {
+      this.editCateForm = {
+        cat_id: categoriesInfo.cat_id,
+        cat_name: categoriesInfo.cat_name,
+        cat_pid: categoriesInfo.cat_pid,
+        cat_level: categoriesInfo.cat_level
+      }
+      this.editCateDialogVisible = true
+    },
+    editCateDialogClosed () {
+      this.$refs.editCateFormRef.resetFields()
+      this.selectedKeys = []
+      this.editCateForm.cat_level = 0
+      this.editCateForm.cat_pid = 0
+    },
+    async editCate () {
+      console.log(this.editCateForm)
+      const { data: res } = await this.$http.put(`categories/${this.editCateForm.cat_id}`, { cat_name: this.editCateForm.cat_name })
+      if (res.meta.status !== 200) { return this.$message.error('更新分类失败') }
+      this.$message.success('更新分类成功')
+      this.getCateList()
+      this.editCateDialogVisible = false
     }
   }
 }
