@@ -22,8 +22,6 @@
           <el-input v-model="addCateForm.cat_name"></el-input>
         </el-form-item>
         <el-form-item label="父级分类：">
-          <!-- options 用来指定数据源 -->
-          <!-- props 用来指定配置对象 -->
           <el-cascader
             :options="parentCateList"
             :props="cascaderProps"
@@ -36,6 +34,28 @@
       <span slot="footer" class="dialog-footer">
         <el-button @click="addCateDialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="addCate">确 定</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog
+      title="添加分类"
+      :visible.sync="editCateDialogVisible"
+      width="50%"
+      @close="editCateDialogClosed"
+    >
+      <!-- 修改分类的表单 -->
+      <el-form
+        :model="editCateForm"
+        :rules="editCateFormRules"
+        ref="editCateFormRef"
+        label-width="100px"
+      >
+        <el-form-item label="分类名称：" prop="cat_name">
+          <el-input v-model="editCateForm.cat_name"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editCateDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="editCate">确 定</el-button>
       </span>
     </el-dialog>
     <el-card>
@@ -65,8 +85,13 @@
           <el-tag size="mini" type="success" v-else-if="scope.row.cat_level === 1">两级</el-tag>
           <el-tag size="mini" type="warning" v-else>三级</el-tag>
         </template>
-        <template #opt>
-          <el-button type="primary" icon="el-icon-edit" size="mini">编辑</el-button>
+        <template #opt="scope">
+          <el-button
+            type="primary"
+            icon="el-icon-edit"
+            size="mini"
+            @click="showEditDialog(scope.row)"
+          >编辑</el-button>
           <el-button type="danger" icon="el-icon-delete" size="mini">删除</el-button>
         </template>
       </tree-table>
@@ -128,6 +153,20 @@ export default {
           { required: true, message: '请输入分类名称', trigger: 'blur' }
         ]
       },
+      editCateDialogVisible: false,
+      editCateForm: {
+        // 将要添加的分类的名称
+        cat_name: '',
+        // 父级分类的Id
+        cat_pid: 0,
+        // 分类的等级，默认要添加的是1级分类
+        cat_level: 0
+      },
+      editCateFormRules: {
+        cat_name: [
+          { required: true, message: '请输入分类名称', trigger: 'blur' }
+        ]
+      },
       parentCateList: [],
       cascaderProps: {
         checkStrictly: true,
@@ -179,8 +218,17 @@ export default {
         this.addCateDialogVisible = false
       })
     },
+    editCate () {
+      this.editCateDialogVisible = false
+    },
     addCateDialogClosed () {
       this.$refs.addCateFormRef.resetFields()
+      this.selectedKeys = []
+      this.addCateForm.cat_level = 0
+      this.addCateForm.cat_pid = 0
+    },
+    editCateDialogClosed () {
+      this.$refs.editCateFormRef.resetFields()
       this.selectedKeys = []
       this.addCateForm.cat_level = 0
       this.addCateForm.cat_pid = 0
@@ -204,6 +252,11 @@ export default {
         this.addCateForm.cat_pid = 0
         this.addCateForm.cat_level = 0
       }
+    },
+    showEditDialog (goodsInfo) {
+      console.log(goodsInfo)
+      this.editCateForm = goodsInfo
+      this.editCateDialogVisible = true
     }
   }
 }
