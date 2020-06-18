@@ -218,8 +218,7 @@ export default {
         label: 'cat_name',
         children: 'children'
       },
-      selectedKeys: [],
-      allBodyData: []
+      selectedKeys: []
     }
   },
   created () {
