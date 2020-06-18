@@ -37,7 +37,7 @@
       </span>
     </el-dialog>
     <el-dialog
-      title="添加分类"
+      title="修改分类"
       :visible.sync="editCateDialogVisible"
       width="50%"
       @close="editCateDialogClosed"
@@ -155,6 +155,7 @@ export default {
       },
       editCateDialogVisible: false,
       editCateForm: {
+        cat_id: 0,
         // 将要添加的分类的名称
         cat_name: '',
         // 父级分类的Id
@@ -218,9 +219,6 @@ export default {
         this.addCateDialogVisible = false
       })
     },
-    editCate () {
-      this.editCateDialogVisible = false
-    },
     addCateDialogClosed () {
       this.$refs.addCateFormRef.resetFields()
       this.selectedKeys = []
@@ -253,10 +251,22 @@ export default {
         this.addCateForm.cat_level = 0
       }
     },
-    showEditDialog (goodsInfo) {
-      console.log(goodsInfo)
-      this.editCateForm = goodsInfo
+    showEditDialog (categoriesInfo) {
+      this.editCateForm = {
+        cat_id: categoriesInfo.cat_id,
+        cat_name: categoriesInfo.cat_name,
+        cat_pid: categoriesInfo.cat_pid,
+        cat_level: categoriesInfo.cat_level
+      }
       this.editCateDialogVisible = true
+    },
+    async editCate () {
+      console.log(this.editCateForm)
+      const { data: res } = await this.$http.put(`categories/${this.editCateForm.cat_id}`, { cat_name: this.editCateForm.cat_name })
+      if (res.meta.status !== 200) { return this.$message.error('更新分类失败') }
+      this.$message.success('更新分类成功')
+      this.getCateList()
+      this.editCateDialogVisible = false
     }
   }
 }
