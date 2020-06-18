@@ -64,7 +64,49 @@
           <el-button type="primary" @click="showAddCateDialog">添加分类</el-button>
         </el-col>
       </el-row>
-      <tree-table
+      <el-table
+        :data="catelist"
+        style="width: 100%;margin-bottom: 20px;"
+        row-key="cat_id"
+        :tree-props="{children: 'children'}"
+      >
+        <el-table-column prop="cat_name" label="分类名称"></el-table-column>
+        <el-table-column label="是否有效">
+          <template #default="scope">
+            <i
+              class="el-icon-success"
+              style="color:lightgreen"
+              v-if="scope.row.cat_deleted === false"
+            ></i>
+            <i class="el-icon-error" style="color:red" v-else></i>
+          </template>
+        </el-table-column>
+        <el-table-column label="排序">
+          <template #default="scope">
+            <el-tag size="mini" v-if="scope.row.cat_level === 0">一级</el-tag>
+            <el-tag size="mini" type="success" v-else-if="scope.row.cat_level === 1">两级</el-tag>
+            <el-tag size="mini" type="warning" v-else>三级</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作">
+          <template #default="scope">
+            <el-button
+              type="primary"
+              icon="el-icon-edit"
+              size="mini"
+              @click="showEditDialog(scope.row)"
+            >编辑</el-button>
+            <el-button
+              type="danger"
+              icon="el-icon-delete"
+              size="mini"
+              @click="removeCateById(scope.row.cat_id)"
+            >删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- <tree-table
         :data="catelist"
         :columns="columns"
         :selection-type="false"
@@ -94,7 +136,7 @@
           >编辑</el-button>
           <el-button type="danger" icon="el-icon-delete" size="mini">删除</el-button>
         </template>
-      </tree-table>
+      </tree-table>-->
       <el-pagination
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
@@ -176,7 +218,8 @@ export default {
         label: 'cat_name',
         children: 'children'
       },
-      selectedKeys: []
+      selectedKeys: [],
+      allBodyData: []
     }
   },
   created () {
@@ -191,7 +234,6 @@ export default {
 
       this.catelist = res.data.result
       this.total = res.data.total
-      this.$message.success('获取商品分类成功')
     },
     handleSizeChange (newSize) {
       this.querInfo.pagesize = newSize
@@ -265,8 +307,28 @@ export default {
       const { data: res } = await this.$http.put(`categories/${this.editCateForm.cat_id}`, { cat_name: this.editCateForm.cat_name })
       if (res.meta.status !== 200) { return this.$message.error('更新分类失败') }
       this.$message.success('更新分类成功')
+      console.log(this.catelist)
       this.getCateList()
       this.editCateDialogVisible = false
+    },
+    async removeCateById (id) {
+      this.$confirm('此操作将永久删除该分类，是否继续？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        const { data: res } = await this.$http.delete(`categories/${id}`)
+        if (res.meta.status !== 200) {
+          return this.$message.error('删除分类失败')
+        }
+        this.$message.success('删除分类成功')
+        if (this.catelist.length === 1) {
+          this.querInfo.pagenum = 1
+        }
+        this.getCateList()
+      }).catch(() => {
+        this.$message.info('用户删除操作已取消')
+      })
     }
   }
 }
