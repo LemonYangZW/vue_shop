@@ -1,5 +1,6 @@
 import Vue from 'vue'
-import { Button, message } from 'ant-design-vue'
+import { Checkbox, Button, message } from 'ant-design-vue'
 
 Vue.component(Button.name, Button)
+Vue.use(Checkbox)
 Vue.prototype.$messageAntd = message
