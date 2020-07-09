@@ -78,18 +78,42 @@
               <el-input v-model="item.attr_vals"></el-input>
             </el-form-item>
           </el-tab-pane>
-          <el-tab-pane label="商品图片" name="3">商品图片</el-tab-pane>
-          <el-tab-pane label="商品内容" name="4">商品内容</el-tab-pane>
+          <el-tab-pane label="商品图片" name="3">
+            <el-upload
+              :action="uploadURL"
+              :headers="headerObj"
+              :on-preview="handlePreview"
+              :on-remove="handleRemove"
+              :file-list="fileList"
+              :on-success="handleSuccess"
+              list-type="picture"
+            >
+              <el-button size="small" type="primary">点击上传</el-button>
+            </el-upload>
+          </el-tab-pane>
+          <el-tab-pane label="商品内容" name="4">
+            <quill-editor v-model="addForm.goods_introduce"></quill-editor>
+            <el-button type="primary" class="btnAdd" @click="add">添加商品</el-button>
+          </el-tab-pane>
         </el-tabs>
       </el-form>
     </el-card>
+    <el-dialog title="图片预览" :visible.sync="previewVisible" width="50%">
+      <img :src="previewPath" class="previewImg" />
+    </el-dialog>
   </div>
 </template>
 
 <script>
+import _ from 'lodash'
 export default {
   data () {
     return {
+      headerObj: {
+        Authorization: window.sessionStorage.getItem('token')
+      },
+      uploadURL: 'http://127.0.0.1:8888/api/private/v1/upload',
+      fileList: [],
       activeIndex: '0',
       chkParams: [],
       // 添加商品的表单数据对象
@@ -99,7 +123,10 @@ export default {
         goods_weight: 0,
         goods_number: 0,
         // 商品所属的分类数组
-        goods_cat: []
+        goods_cat: [],
+        pics: [],
+        goods_introduce: '',
+        attrs: []
       },
       addFormRules: {
         goods_name: [
@@ -129,7 +156,9 @@ export default {
       // 动态参数列表数据
       manyTableData: [],
       // 静态属性列表数据
-      onlyTableData: []
+      onlyTableData: [],
+      previewPath: '',
+      previewVisible: false
     }
   },
   created () {
@@ -202,9 +231,58 @@ export default {
     },
     onChange (checkedValues) {
       // console.log('checked = ', checkedValues)
-      // // this.value = '55寸'
+      // this.value = '55寸'
       // console.log('value = ', this.chkParams)
       // this.chkParams.push('checkedValues')
+    },
+    handleRemove (file, fileList) {
+      console.log(file, fileList)
+      const filepath = file.response.data.tmp_path
+      const i = this.addForm.pics.findIndex(x => x.pic === filepath)
+      this.addForm.pics.splice(i, 1)
+    },
+    handlePreview (file) {
+      this.previewPath = file.response.data.url
+      this.previewVisible = true
+    },
+    handleSuccess (response) {
+      console.log(response)
+      const picInfo = { pic: response.data.tmp_path }
+      this.addForm.pics.push(picInfo)
+    },
+    async add () {
+      this.$refs.addFormRef.validate(async valid => {
+        if (!valid) {
+          return this.$message.error('请填写必要的表单项!')
+        }
+        const form = _.cloneDeep(this.addForm)
+        form.goods_cat = form.goods_cat.join(',')
+
+        this.manyTableData.forEach(item => {
+          const newInfo = {
+            attr_id: item.attr_id,
+            attr_value: item.attr_vals.join(',')
+          }
+          this.addForm.attrs.push(newInfo)
+        })
+        this.onlyTableData.forEach(item => {
+          const newInfo = {
+            attr_id: item.attr_id,
+            attr_value: item.attr_vals
+          }
+          this.addForm.attrs.push(newInfo)
+        })
+
+        form.attrs = this.addForm.attrs
+        const { data: res } = await this.$http.post('goods', form)
+        console.log(res)
+        if (res.meta.status !== 201) {
+          return this.$message.error('添加商品失败')
+        }
+
+        this.$message.success('添加商品成功')
+        this.$router.push('/goods')
+      })
     }
   },
   computed: {
@@ -225,5 +303,13 @@ export default {
 
 .el-cascader {
   width: 40%;
+}
+
+.previewImg {
+  width: 100%;
+}
+
+.btnAdd {
+  margin-top: 15px;
 }
 </style>
