@@ -36,14 +36,9 @@
           <template #default="scope">{{scope.row.create_time | dateFormat}}</template>
         </el-table-column>
         <el-table-column label="操作" width="130px">
-          <template #default="scope">
+          <template>
             <el-button type="primary" icon="el-icon-edit" size="mini" @click="showBox"></el-button>
-            <el-button
-              type="danger"
-              icon="el-icon-delete"
-              size="mini"
-              @click="removeById(scope.row.goods_id)"
-            ></el-button>
+            <el-button type="success" icon="el-icon-location" size="mini" @click="showProgressBox"></el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -57,19 +52,80 @@
         :total="total"
       ></el-pagination>
     </el-card>
+    <el-dialog
+      title="修改地址"
+      :visible.sync="editOrderDialogVisible"
+      width="50%"
+      @close="editOrderDialogClosed"
+    >
+      <!-- 修改分类的表单 -->
+      <el-form
+        :model="editOrderForm"
+        :rules="editOrderFormRules"
+        ref="editOrderFormRef"
+        label-width="100px"
+      >
+        <el-form-item label="省市区/县：" prop="address1">
+          <el-cascader :options="cityData" v-model="editOrderForm.address1"></el-cascader>
+        </el-form-item>
+        <el-form-item label="详细地址：" prop="address2">
+          <el-input v-model="editOrderForm.cat_name"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editOrderDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="editOrder">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <el-dialog title="物流进度" :visible.sync="progressVisible" width="50%" @close="progressClosed">
+      <!-- 修改分类的表单 -->
+      <el-form
+        :model="editOrderForm"
+        :rules="editOrderFormRules"
+        ref="editOrderFormRef"
+        label-width="100px"
+      >
+        <el-timeline :reverse="reverse">
+          <el-timeline-item
+            v-for="(activity, index) in progressInfo"
+            :key="index"
+            :timestamp="activity.time"
+          >{{activity.context}}</el-timeline-item>
+        </el-timeline>
+      </el-form>
+    </el-dialog>
   </div>
 </template>
 <script>
+import cityData from './citydata.js'
 export default {
   data () {
     return {
+      reverse: false,
       queryInfo: {
         query: '',
         pagenum: 1,
         pagesize: 10
       },
       total: 0,
-      orderList: []
+      orderList: [],
+      editOrderDialogVisible: false,
+      editOrderForm: {
+        address1: [],
+        address2: ''
+      },
+      editOrderFormRules: {
+        address1: {
+          required: true, message: '请选择省市区', trigger: 'blur'
+        },
+        address2: {
+          required: true, message: '请填写详细地址', trigger: 'blur'
+        }
+      },
+      cityData: cityData,
+      progressVisible: false,
+      progressInfo: []
     }
   },
   created () {
@@ -92,9 +148,36 @@ export default {
     handleCurrentChange (newPage) {
       this.queryInfo.pagenum = newPage
       this.getOrderList()
+    },
+    showBox () {
+      this.editOrderDialogVisible = true
+    },
+    editOrderDialogClosed () {
+      this.$refs.editOrderFormRef.resetFields()
+      this.editOrderDialogVisible = false
+    },
+    editOrder () {
+
+    },
+    async showProgressBox () {
+      const { data: res } = await this.$http.get('/kuaidi/804909574412544580')
+
+      if (res.meta.status !== 200) {
+        return this.$message.error('获取物流进度失败')
+      }
+      console.log(res)
+      this.progressInfo = res.data
+      this.progressVisible = true
+    },
+    progressClosed () {
+
     }
+
   }
 }
 </script>
 <style lang="less" scoped>
+.el-cascader {
+  width: 100%;
+}
 </style>
